@@ -1,142 +1,180 @@
 ---
-layout: page
-title: ICLR 2022 Blog Track
-tags: [proposal, call]
-authors: Bubeck, Sebastien (Microsoft); Dobre, David (Mila); Gauthier, Charlie (Mila); Gidel, Gauthier (Mila); Vernade, Claire (DeepMind)
+layout: post
+title: Large Scale Image Completion via Co-Modulated GANs
+tags: [GAN, co-modulation, image completion, image-to-image translation]
+authors: Katherine Xu (Massachusetts Institute of Technology) and Megan Wei (Massachusetts Institute of Technology)
 ---
 
-<br>
-<p align="center">
-  <img src="{{ sit.url }}/public/images/2021-09-01-sample-submission/ICLR-logo.png" alt="ICLR Logo">
-</p>
+<em>This blog is an overview of <a href="https://openreview.net/pdf?id=sSjqmfsk95O">this paper</a> by Shengyu Zhao et al. published at ICLR 2021.</em>
 
-## Important Information
+Generative adversarial networks (GANs) have recently become popular deep learning models for producing synthetic yet realistic images. They have attained state-of-the-art performance on image generation tasks, including <a href="https://openaccess.thecvf.com/content_ICCV_2017/papers/Zhu_Unpaired_Image-To-Image_Translation_ICCV_2017_paper.pdf">image-to-image translation</a>.
 
-- The ICLR Venue is currently **not yet open**. We will announce when the venue opens.
-- The submission deadline for your blog post is **January 7th, 2022 EOA**.
-- The review process will conclude on **March 25th, 2022**
+Since vanilla GANs do not perform well in free-form image completion tasks (<a href="https://openaccess.thecvf.com/content_ECCV_2018/papers/Guilin_Liu_Image_Inpainting_for_ECCV_2018_paper.pdf">Liu et al., 2018</a>; <a href="https://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Free-Form_Image_Inpainting_With_Gated_Convolution_ICCV_2019_paper.pdf">Yu et al., 2019</a>), there has been significant progress using task-specific approaches to improve the quality of generated images, such as by minimizing color discrepancy. These specialized GANs work well for small-scale image completion tasks, but they do not achieve promising performance when handling large-scale missing image regions. Why might existing models be insufficient for larger regions?
 
----
+The answer lies in the fact that existing algorithms do not have the capability of generating completely new images. If a model cannot generate a completely new image, then it will have a difficult time completing a large region of an existing image.
 
-- <h2><a href="about">About</a></h2>
-- <h2><a href="blog">ICLR Blog Posts</a></h2>
-- <h2><a href="submitting">Submitting</a></h2>
+To handle large-scale missing regions, <a href="https://openreview.net/pdf?id=sSjqmfsk95O">Zhao et al.</a> propose co-modulated generative adversarial networks, which use co-modulation to combine the generative capability of unconditional modulated models with conditional and stochastic style representations. They found that co-modulated GANs produce contents that are diverse and consistent with the rest of the image and that generalize well to large-scale image completion tasks.
 
----
-
-<!-- # Motivation -->
-
-The Machine Learning community is currently experiencing a
-[reproducibility crisis](https://neuripsconf.medium.com/designing-the-reproducibility-program-for-neurips-2020-7fcccaa5c6ad)
-and a reviewing crisis [[Littman, 2021]](#Litt). Because of the highly competitive and noisy
-reviewing process of ML conferences [[Tran et al., 2020]](#Tran), researchers have an incentive to
-oversell their results, slowing down the progress and diminishing the
-integrity of the scientific community. Moreover with the growing number
-of papers published and submitted at the main ML conferences [[Lin et al., 2020]](#Lin), it has
-become more challenging to keep track of the latest advances in the
-field.
-
-Blog posts are becoming an increasingly popular and useful way to talk
-about science [[Brown and Woolston, 2018]](#Brow).
-They offer substantial value to the scientific community
-by providing a flexible platform to foster open, human, and transparent
-discussions about new insights or limitations of a scientific
-publication. However, because they are not as recognized as standard
-scientific publications, only a minority of researchers manage to
-maintain an active blog and get visibility for their efforts. Many are
-well-established researchers ([Francis Bach](https://francisbach.com/),
-[Ben Recht](https://www.argmin.net/), [Ferenc
-Huszár](https://www.inference.vc/), [Lilian
-Weng](https://lilianweng.github.io/lil-log/)) or big corporations that
-leverage entire teams of graphic designers designer and writers to
-polish their blogs ([Facebook AI](https://ai.facebook.com/blog/?page=1),
-[Google AI](https://ai.googleblog.com/),
-[DeepMind](https://deepmind.com/blog),
-[OpenAI](https://openai.com/blog/)). As a result, the incentives for
-writing scientific blog posts are largely personal; it is unreasonable
-to expect a significant portion of the machine learning community to
-contribute to such an initiative when everyone is trying to establish
-themselves through publications.
+In this blog, we summarize the approach of co-modulated GANs for image completion, its generalization to image-to-image translation tasks, and a new proposed quantitative evaluation metric for GANs. We also extend the findings by Zhao et al. by performing new image completion experiments to examine the biases of co-modulated GANs.
 
 
-# A Blog Post Conference Track
+## Overview
 
-Our goal is to create a formal call for blog posts at ICLR to
-incentivize and reward researchers to review past work and summarize the
-outcomes, develop new intuitions, or highlight some shortcomings. A very
-influential initiative of this kind happened after the second world war
-in France. Because of the lack of up-to-date textbooks, a collective of
-mathematicians under the pseudonym Nicolas Bourbaki [[Halmos 1957]](#Halm), decided to start a
-series of textbooks about the foundations of mathematics [[Bourbaki, 1939]](#Bour).
-In the same vein, we aim at providing a new way to summarize scientific knowledge in
-the ML community.
-
-Due to the large diversity of topics that can be discussed in a blog
-post, we decided to restrict the range of topics for this call for blog
-posts. We identified that the blog posts that would bring to most value
-to the community and the conference would be posts that distill and
-discuss *previously published papers*.
-
-### A call for blog posts discussing work previously published at ICLR
-
-The format and process for this blog post track is as follows:
-
--   Write a post about a paper previously published at ICLR, with the
-    constraint that one cannot write a blog post on work that they have
-    a conflict of interest with. This implies that one cannot review
-    their own work, or work originating from their institution or
-    company. We want to foster productive discussion about *ideas*, and
-    prevent posts that intentionally aim to help or hurt individuals or
-    institutions.
-
--   Blogs will be peer-reviewed (double-blind, see
-    Section <a href="#sub:sub_process" data-reference-type="ref" data-reference="sub:sub_process">2.5</a>)
-    for quality and novelty of the content: clarity and pedagogy of the
-    exposition, new theoretical or practical insights,
-    reproduction/extension of experiments, etc.
-
--   The posts will be published under a unified template (see
-    Section <a href="#sub:sub_format" data-reference-type="ref" data-reference="sub:sub_format">2.4</a>
-    and
-    Section <a href="#sub:sub_process" data-reference-type="ref" data-reference="sub:sub_process">2.5</a>)
-    and hosted on the conference website or our own Github page.
+1. [Summary of Co-modulated GANs](#summary-of-co-modulated-gans)
+2. [Experiments](#experiments)
+3. [Biases and Limitations of Co-modulated GANs](#biases-and-limitations-of-co-modulated-gans)
+4. [Related Work](#related-work)
+5. [Conclusion](#conclusion)
 
 
-# Submissions
+## Summary of Co-modulated GANs
 
-Our goal is to avoid heavily engineered, professionally-made
-blog-posts---Such as the “100+ hours” mentioned as a standard by the [Distill
-  guidelines](https://distill.pub/journal/)---to entice ideas and clear writing rather than dynamic
-visualizations or embedded javascript engines.
-
-As a result, we restrict submissions to the Markdown format. We believe
-this is a good trade-off between complexity and flexibility. Markdown
-enables users to easily embed media such as images, gifs, audio, and
-video as well as write mathematical equations using MathJax, without
-requiring users to know how to create HTML web pages. This (mostly)
-static format is also fairly portable; users can download the blog post
-without much effort for offline reading or archival purposes. More
-importantly, this format can be easily hosted and maintained through
-GitHub.
-
-Please checkout the <a href="submitting">submitting</a> section for a detailed overview on the
-process of creating and submitting a blog post.
-
-# References
-
-<a name="Litt">Michael L Littman. Collusion rings threaten the integrity of computer science research. Communications of the ACM, 2021.</a>
-
-<a name="Tran">David Tran, Alex Valtchanov, Keshav Ganapathy, Raymond Feng, Eric Slud, Micah Goldblum, and Tom Goldstein. An open review of openreview: A critical analysis of the machine learning conference review process. arXiv, 2020. </a>
-
-<a name="Lin">Hsuan-Tien Lin, Maria-Florina Balcan, Raia Hadsell, and Marc’Aurelio Ranzato. What we learned from neurips2020 reviewing process. Medium https://medium.com/@NeurIPSConf/what-we-learned-from-neurips-2020-reviewing-process-e24549eea38f, 2020. </a>
-
-<a name="Brow">Eryn Brown and Chris Woolston. Why science blogging still matters. Nature, 2018.</a>
-
-<a name="Halm">Paul R Halmos. Nicolas bourbaki. Scientific American, 1957.<a>
-
-<a name="Bour">Nicolas Bourbaki. Elements of mathematics. Éditions Hermann, 1939.</a>
+Co-modulated GANs link image-conditional GANs and unconditional modulated models to address large-scale image completion tasks. Co-modulation brings stochastic and conditional style representations together. To improve existing metrics for image completion, the proposed Paired/Unpaired Inception Discriminative Score (P-IDS/U-IDS) is robust to sampling size, captures subtle differences well, and correlates with human preferences. Experiments using co-modulated GANs lead to high quality and diverse results in free-form image completion and image-to-image translation tasks.
 
 
+### Modulation
+
+In the unconditional modulated generator, the decoder originates from some learned constant, while the latent vector passes through a multi-layer fully connected mapping network. The mapped latent vector generates a style vector for each modulation via a learned affine transformation. The style vector can be expressed as the following:
+
+$$\begin{equation}
+s = A(M(z))
+\end{equation}$$
+
+Here, $s$ is the style vector, $A$ is the affine transformation, $M$ is the mapping network, and $$z$$ is the latent vector.
+
+The conditional modulated generator extends the image-conditional generator by conditioning the modulation on the learned flattened features from the image encoder. The style vector can be represented as the following:
+
+$$\begin{equation}
+s = A(E(y))
+\end{equation}$$
+
+$E$ is the conditional image encoder, and $y$ is the conditional input image.
+
+One issue with conditional modulation is the lack of stochastic generative capability. In large scale image completion, outputs are weakly conditioned, which results in poor generalization and the lack of diverse outputs.
 
 
+### Co-modulation
 
+![Mod and Co-Mod]({{ site.url }}/public/images/2021-12-09-co-mod-gan/fig2.png)
+
+Co-modulation addresses the generative capability issue of conditional modulation by combining unconditional modulated generators with image-conditional generators.
+
+The co-modulated style vector can be expressed as a joint affine transformation conditioning on both style representations:
+
+$$\begin{equation}
+s = A(E(y), M(z))
+\end{equation}$$
+
+The linear mapping in the style vector contributes to stochasticity. Furthermore, the co-modulation approach improves visual quality at large-scale missing regions.
+
+
+### Paired/Unpaired Inception Discriminative Score
+
+Evaluation methods are important for assessing the performance of GANs, but there is a lack of good quantitative metrics for image completion (<a href="https://openaccess.thecvf.com/content_ECCV_2018/papers/Guilin_Liu_Image_Inpainting_for_ECCV_2018_paper.pdf">Liu et al., 2018</a>; <a href="https://openaccess.thecvf.com/content_cvpr_2018/papers/Yu_Generative_Image_Inpainting_CVPR_2018_paper.pdf">Yu et al., 2018</a>; <a href="https://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Free-Form_Image_Inpainting_With_Gated_Convolution_ICCV_2019_paper.pdf">Yu et al., 2019</a>). Existing image completion algorithms rely on similarity-based metrics, such as PSNR and SSIM, but these approaches prefer blurry results that are less than ideal. As a result, qualitative metrics have been used, such as conducting a user study that asks humans to identify real vs. fake images. However, this approach lacks reproducibility and is time- and labor-intensive.
+
+To address these challenges, Zhao et al. propose a new quantitative evaluation metric called Paired/Unpaired Inception Discriminative Score (P-IDS/U-IDS) that is robust to sampling size and correlates well with human preferences. The P-IDS/U-IDS has advantages over the Fréchet inception distance (FID) because it is robust to sampling size, effective at capturing subtle differences, and correlates well to human preferences.
+
+P-IDS/U-IDS calculates the linear separability in the pre-trained feature space of an Inception v3 model $I(\cdot)$ that maps an input image to output features of 2048 dimensions. In the paired case, we have pairs of real images and their respective generated fake images $(x, x’) \in X$, where $x$ is the real image and $x’$ is the fake image. Features are extracted from an equal number of real and fake images and then fitted by a linear SVM, which represents the linear separability in the feature space. Let $f(\cdot)$ be the decision function of the SVM, and $f(I(x)) > 0$ if and only if $x$ is considered real. The P-IDS determines the probability that a fake image is considered more realistic than its corresponding real image, and it is given by:
+
+![P-IDS]({{ site.url }}/public/images/2021-12-09-co-mod-gan/p-ids.png)
+
+Similarly, in the case where we do not have pairs of real and fake images, we sample an equal number of real images (from distribution $X$) and fake images (from distribution $X’$) and fit the linear SVM $f(\cdot)$. The U-IDS determines the misclassification rate, and it is given by:
+
+![U-IDS]({{ site.url }}/public/images/2021-12-09-co-mod-gan/u-ids.png)
+
+
+## Experiments
+
+### Image Completion
+
+To use a co-modulated GAN for image completion, the model takes in as input a real image and a mask image that represents missing image regions, and it outputs a generated fake image that fills in the missing regions. The masks can cover any shape of the real image, including the entire image. To try a demo of co-modulated GANs, visit <a href="https://comodgan.azurewebsites.net/en-US/">https://comodgan.azurewebsites.net/en-US/</a>.
+
+Zhao et al. conducted image completion experiments using the <a href="https://github.com/NVlabs/ffhq-dataset">FFHQ dataset</a> and the <a href="http://places2.csail.mit.edu/">Places2 dataset</a>. They compare the performance of using a co-modulated GAN with the performance of other state-of-the-art methods such as <a href="https://github.com/zhaoyuzhi/deepfillv2">DeepFillv2</a>.
+
+![Qualitative Results Image Completion]({{ site.url }}/public/images/2021-12-09-co-mod-gan/fig7.png)
+
+Below are quantitative results for large scale image completion compared to DeepFillv2 and RFR.
+
+![Quantitative Results Image Completion]({{ site.url }}/public/images/2021-12-09-co-mod-gan/table1.png)
+
+### Effect on Mask Shape on Generated Images Using Places2
+
+Extending the work of Zhao et al, we investigated whether co-modulated GANs exhibit shape bias and evaluate the difference between the generated object and the masked object. Given an input image, we first create a semantic segmentation, using the model trained on the <a href="https://groups.csail.mit.edu/vision/datasets/ADE20K/">MIT ADE20K dataset</a>. Then, we separate the segmentation out into its individual predicted classes and create a mask from one of the top predicted classes. Using the co-modulated GAN pre-trained on the Places2 dataset, we generate new images from the input image and the mask from the segmentation. The figure provides an example of the setup of this experiment.
+
+![Shape Experiment Method]({{ site.url }}/public/images/2021-12-09-co-mod-gan/places_method.png)
+
+Below is a sample of image generations from an image from the Places2 dataset with a mask on the swimming pool. The results lack diversity and fail to generalize that the shape of the pool is the shape of the pool mask. The results do show some semantic understanding that there would be a body of water in this region and consistently generates a pool of a certain shape that's not the shape of the mask. 
+
+![Places Examples]({{ site.url }}/public/images/2021-12-09-co-mod-gan/beachsample.png)
+
+When using the co-modulated GAN trained on the Places2 dataset, generated images may fail to generalize object generation to the segmented shape, but the co-modulated GAN does show some semantic understanding of the class of object of the masked region. In addition, there is very little diversity among the set of generated images.
+
+### Examining the Distribution of Color in Completed Regions Using FFHQ
+
+We extend the experiments by Zhao et al. by examining whether co-modulated GANs have color biases in the generated images. For our experiment, we sample 40 fake images using a given real image from the FFHQ dataset, and we use a mask that aims to cover a person’s shirt by masking the bottom one-fourth of the image. Then, we assess visually the diversity of the distribution of shirt colors in the generated fake images by calculating the number of fake images with shirts of different colors. We chose this evaluation approach because we need to determine the color in specific image regions that contain the person’s shirt, and existing approaches do not solve this task. The figure below shows an example of a real image and mask that was used for this experiment.
+
+![FFHQ Experiment Method]({{ site.url }}/public/images/2021-12-09-co-mod-gan/ffhq_experiment_method.png)
+
+The person in the real image of the above figure wears a solid yellow top, which is covered completely by the mask. Since there is no indication of yellow clothing in the masked image, we expect that the co-modulated GAN produces fake images with differently colored clothes for the person. To determine the distribution of images, we grouped the shirt colors of fake images into one of nine possible colors: red, orange, yellow, green, blue, purple, black, gray, and white. The table below shows the distribution of shirt colors in the fake images.
+
+![FFHQ Example 1 Images]({{ site.url }}/public/images/2021-12-09-co-mod-gan/ffhq_experiment1.png)
+
+We observed that the 40 sampled images for this specific real image contained only red, blue, purple, and gray shirt colors. An interesting next step would be to determine why the co-modulated GAN tends to generate images with these colors. In addition, the generated shirts all contained one solid color. Examples of fake images for each of these colors are included in the table.
+
+Another example of this experiment uses the real image in the figure below, which contains a person wearing solid blue and green clothing. In contrast, we see that most of the generated images contain non-solid colors that are not blue or green and contain very similar shirt designs. Because the shirt colors are not solid, it is difficult to categorize them into specific colors. Instead, we display 20 of the 40 sampled images.
+
+![FFHQ Example 2 Images]({{ site.url }}/public/images/2021-12-09-co-mod-gan/ffhq_experiment2.png)
+
+We noticed that a significant number of the shirt colors contain white and designs with red, blue, gray, and brown-like colors. The amount of white in this color distribution could be influenced by the white background color, but it is uncertain why the non-white colors and generated designs in the masked region of the image are less diverse.
+
+
+### Image-To-Image Translation
+
+Since co-modulated GANs are generic image-conditional models, they can be easily extended to image-to-image translation tasks. Zhao et al. perform image-to-image translation experiments on <a href="http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/">the Edges2Handbags dataset and the Edges2Shoes dataset</a>.
+
+![Edges2Handbags]({{ site.url }}/public/images/2021-12-09-co-mod-gan/fig13.png)
+
+Using a co-modulated GAN results in higher fidelity (FID) over state-of-the-art methods on these edges to photos datasets. The model also produces superior diversity on the Edges2Handbags dataset, but it does not learn to generate diverse images on the Edges2Shoes dataset. The table below compares the performance of the co-modulated GAN with other methods.
+
+![Edges2Photos]({{ site.url }}/public/images/2021-12-09-co-mod-gan/table2.png)
+
+The images below include results from the image-to-image translation task on the <a href="https://github.com/nightrome/cocostuff">COCO-Stuff</a> validation set using <a href="https://github.com/NVlabs/SPADE">SPADE</a> and co-modulated GANs.
+
+![SPADE]({{ site.url }}/public/images/2021-12-09-co-mod-gan/fig15.png)
+
+
+## Biases and Limitations of Co-modulated GANs
+
+Large-scale image completion is a difficult task. While the co-modulated GAN is able to produce diverse and high quality results in image completion and generalize easily to image-to-image translation, there are still several limitations to the model. Sometimes the model underperforms in recognizing semantic information, particularly in the Places2 dataset, which contains millions of different scenes. As a result, strange artifacts may appear. In addition, some objects from generated images are more diverse within the object class while other objects converge to generating a certain type of object. For example, masked regions in natural sceneries tend to generate similar images, whereas masked regions on buildings tend to have a wider variety of generated objects. While the co-modulated GAN incorporates stochasticity and generalization, it's difficult to find the right balance.
+
+![Paper Figure 17]({{ site.url }}/public/images/2021-12-09-co-mod-gan/fig17.png)
+
+The figure below shows examples of images generated using the co-modulated GAN and FFHQ dataset for the image completion task. As the mask covered up more of the image, there were noticeable changes in age, race, and gender as well as facial expressions, clothing, and accessories from the generated image to the input image. Specifically, we see that the generated images tend to include red colors that are not present in the original images. This aligns with the findings of our experiment studying the distribution of colors among generated images in the previous section.
+
+![Paper Figure 16]({{ site.url }}/public/images/2021-12-09-co-mod-gan/figure16.png)
+
+We also noticed that there are sometimes unusual artifacts added to images, and other failure cases may occur. For example, in the top row of images in the figure below, the generated image includes bright blue-green artifacts to the person's face near the nose and mouth. This blue-green color appears to be the same color that is added to the person's clothing in the image. In the second row of images, the co-modulated GAN fails to recreate an image of the young child.
+
+![Failure Cases]({{ site.url }}/public/images/2021-12-09-co-mod-gan/failure_cases.png)
+
+
+## Related Work
+
+### Image Completion
+
+Image completion can be viewed as a constrained image-to-image translation problem. Early works for image completion used low-level features and could not generate semantically consistent contents. With the rise of deep neural networks, we have seen improvements in image completion tasks. Then, the work by <a href="https://arxiv.org/pdf/1604.07379.pdf">Pathak et al.</a> on Context Encoders gives rise to the first conditional GAN.
+
+Many follow-up works improved on semantic context and texture, edges and contours, and various architectures. Later works focused on the lack of stochasticity and image outpainting subtasks.
+
+
+### Image-To-Image Translation
+
+Image-conditional GANs can be applied to many image-to-image translation tasks. <a href="https://phillipi.github.io/pix2pix/">pix2pix</a> uses a conditional adversarial network that learns both the mapping from input to output image and the loss function to train this mapping. As a result, this network has a wide applicability to various image-to-image translation problems, such as semantic labels to photo, black and white to color, edges to photo, day to night, and aerial to map, without the need for extra parameter tweaking.
+
+
+## Conclusion
+
+Overall, co-modulated GANs are a promising approach for large-scale image completion tasks. In this blog, we presented an overview of co-modulated GANs, the proposed P-IDS/U-IDS quantitative metrics, and results from the paper by Zhao et al. We also performed new experiments investigating the effect of mask shape on generated images using the Places2 dataset, as well as the distribution of color in completed regions using the FFHQ dataset. In addition, we found interesting biases and limitations of using co-modulated GANs on some images in the FFHQ and Places2 datasets, such as the tendency to generate images with red colors.
+
+
+-----
